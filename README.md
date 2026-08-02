@@ -11,18 +11,14 @@ This project is a portable, zero-touch Google Maps scraping skill designed for t
 ### Option 1: Using the CLI (Terminal)
 Open your terminal in your agent workspace and run:
 ```bash
-npx skills add <repository-url-or-username/repo-name>
-```
-*Example (if published to a repository):*
-```bash
-npx skills add leads-sniper/google-maps-scraping
+npx skills add abkorim1998/google-maps-scraper-leads-sniper-agents
 ```
 
 ### Option 2: Using the VS Code Extension
 1. Open **VS Code** and go to **Extensions** (`Ctrl+Shift+X`).
 2. Search for and install **"Agent Skills - Browse, Install & Manage"**.
 3. Click the **Sparkle Icon** in the Activity Bar to open the Agent Skills panel.
-4. Search for `google-maps-scraping` and click **Install**.
+4. Search for `google-maps-scraper-leads-sniper-agents` and click **Install**.
 
 ---
 
