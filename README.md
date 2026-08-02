@@ -48,8 +48,9 @@ If you are not using `skills.sh` or wish to install the skill manually onto your
 
 ### Step 1: Copy the Skill Folder
 Move or copy the `google-maps-scraping` directory to your local Hermes skills folder:
-```
-C:\Users\<Your-Username>\AppData\Local\hermes\skills\google-maps-scraping
+```cmd
+# Windows File Explorer Path (paste this in your address bar):
+%LOCALAPPDATA%\hermes\skills\google-maps-scraping
 ```
 
 ---
@@ -59,7 +60,7 @@ C:\Users\<Your-Username>\AppData\Local\hermes\skills\google-maps-scraping
 Once the files are in place, you need to configure the API credentials and storage paths. 
 
 ### Step 1: Run the Interactive Setup Wizard
-Open your terminal and run the setup script:
+Run the setup wizard directly from your terminal using the copy-pasteable command that matches your installation:
 
 *   **If running directly from the cloned workspace root**:
     Double-click **`setup.bat`** (on Windows) or run:
@@ -69,15 +70,23 @@ Open your terminal and run the setup script:
     *(The root script automatically detects the skill's location and runs the setup wizard).*
 
 *   **If installed via `skills.sh` globally (Recommended)**:
-    ```bash
-    cd ~\.agents\skills\google-maps-scraping
-    python scripts/setup.py
+    Run the script using the system home path:
+    ```cmd
+    # Command Prompt (CMD):
+    python %USERPROFILE%\.agents\skills\google-maps-scraping\scripts\setup.py
+
+    # PowerShell:
+    python $HOME\.agents\skills\google-maps-scraping\scripts\setup.py
     ```
 
 *   **If installed manually in Hermes AppData**:
-    ```bash
-    cd C:\Users\<Your-Username>\AppData\Local\hermes\skills\google-maps-scraping
-    python scripts/setup.py
+    Run the script using the local AppData path:
+    ```cmd
+    # Command Prompt (CMD):
+    python %LOCALAPPDATA%\hermes\skills\google-maps-scraping\scripts\setup.py
+
+    # PowerShell:
+    python $env:LOCALAPPDATA\hermes\skills\google-maps-scraping\scripts\setup.py
     ```
 
 The script will guide you through the following configurations:
