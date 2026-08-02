@@ -20,25 +20,22 @@ Before installing, make sure your computer has the following requirements ready:
 
 [skills.sh](https://www.skills.sh/) is the package manager and registry for AI Agent skills (used by Claude Code, Cursor, Hermes, Copilot, etc.). You can install this skill automatically in your agent's environment using the CLI.
 
-### Option 1: Global Installation (Recommended)
-This installs the skill globally in your home directory (available across all projects on your machine) using the default **symlink** method. 
+### Option 1: Global Symlink Installation (Recommended)
+This installs the skill globally in your home directory using the **symlink** method (allowing automatic updates). 
 
-You can target the Hermes agent specifically to avoid errors from agents that do not support global installs (like PromptScript):
+To force the `skills` CLI to create a symbolic link (symlink) on Windows, target both `hermes-agent` and `claude-code` (targeting a single agent defaults to copying the files instead of symlinking):
 ```bash
-npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --agent hermes-agent --global --yes
+npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --agent hermes-agent --agent claude-code --global --yes
 ```
 
-> [!NOTE]
-> If you run the command without specifying specific agents (`--agent`), you might see a `Failed to install` warning for `PromptScript` at the end because it doesn't support global scope. This warning is safe to ignore as long as it successfully installs to your target agent (e.g., Hermes Agent, Claude Code, Cursor, Windsurf).
-
 ### Option 2: Interactive Installation
-To customize the installation scope (Project vs. Global) and method (Symlink vs. Copy), run the command interactively:
+To customize the installation scope and method step-by-step:
 ```bash
 npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping
 ```
 During the prompt:
 1. Select **Global** as the installation scope.
-2. Choose **Symlink** as the installation method (recommended for easy updates).
+2. Select both **Hermes Agent** and **Claude Code** to ensure the symlink method is used.
 
 ---
 
