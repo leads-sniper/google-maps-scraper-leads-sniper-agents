@@ -4,6 +4,18 @@ This project is a portable, zero-touch Google Maps scraping skill designed for t
 
 ---
 
+## 📋 Prerequisites
+
+Before installing, make sure your computer has the following requirements ready:
+
+1. **Google Chrome Browser**: Installed and running on your system.
+2. **Leads Sniper Chrome Extension**: Installed in Google Chrome.
+3. **Leads Sniper API Key**: Active and copied from the extension side panel.
+4. **Hermes Desktop Application**: Installed on your system.
+5. **Python 3.8 or newer**: Installed and added to your system's `PATH`.
+
+---
+
 ## 🚀 Quick Install via `skills.sh`
 
 [skills.sh](https://www.skills.sh/) is the package manager and registry for AI Agent skills (used by Claude Code, Cursor, Hermes, Copilot, etc.). You can install this skill automatically in your agent's environment.
@@ -27,14 +39,10 @@ npx skills add abkorim1998/google-maps-scraper-leads-sniper-agents
 If you are not using `skills.sh` or wish to install the skill manually onto your Hermes installation, follow these steps:
 
 ### Step 1: Copy the Skill Folder
-Move or copy the `google-maps-scraping-5.2.0` directory to your local Hermes skills folder:
+Move or copy the `google-maps-scraping` directory to your local Hermes skills folder:
 ```
 C:\Users\<Your-Username>\AppData\Local\hermes\skills\scraping\google-maps-scraping
 ```
-
-### Step 2: Install Hermes & Python
-*   Ensure you have the [Hermes Desktop Application](https://github.com/nousresearch/hermes) installed.
-*   Make sure **Python 3.8 or newer** is installed on your computer and added to your system's PATH.
 
 ---
 
