@@ -1,7 +1,7 @@
 ---
 name: google-maps-scraping
 description: "Scrape Google Maps B2B leads via bundled Leads Sniper server. Zero-touch setup — auto-starts server, interactive Google Workspace auth, portable across machines."
-version: 5.2.0
+version: 5.3.0
 author: Hermes Agent
 metadata:
   hermes:
@@ -369,22 +369,77 @@ Read the last line of `gmaps_progress.log` in the configured storage dir (`get_s
 
 All scraping must happen **inside a `delegate_task` subagent** — the subagent can use terminal/curl internally, but the main chat sees **only** clean progress messages and the final result. No shell commands, no "sleep 45", no "curl -s ...", no background task mentions.
 
+### ⚡ Speed-Optimized Pattern (Pre-Check Then Delegate)
+
+The subagent has **no conversation context** — it re-loads skills, re-reads config, re-checks auth from scratch. That adds ~50s of overhead before the job is even submitted.
+
+**Permanent fix:** main agent pre-checks everything first, then passes confirmed state to the subagent so it skips setup entirely.
+
+**Step 1 — Main agent pre-checks** (in `execute_code`, not terminal):
+
+```python
+import sys, json, urllib.request
+from pathlib import Path
+
+SKILL = Path.home() / "AppData/Local/hermes/skills/google-maps-scraping"
+sys.path.insert(0, str(SKILL / "scripts"))
+from lib import load_config, check_google_auth
+
+cfg = load_config()
+token = cfg['api']['token']
+base_url = cfg['api']['base_url']
+authed, _ = check_google_auth()
+
+# Check server
+try:
+    req = urllib.request.Request(f"{base_url}/v1/status",
+        headers={"Authorization": f"Bearer {token}"})
+    urllib.request.urlopen(req, timeout=5)
+    server_ok = True
+except Exception:
+    server_ok = False
+    # start server
+    import subprocess
+    subprocess.run(["python", str(SKILL/"scripts/server.py"), "ensure"],
+        cwd=str(SKILL), capture_output=True, timeout=30)
+
+print(f"TOKEN={token}")
+print(f"BASE_URL={base_url}")
+print(f"AUTHED={authed}")
+print(f"SERVER={server_ok}")
+```
+
+**Step 2 — Delegate with confirmed state passed as context** (instant, no re-checks):
+
 Delegate a subagent with this structured goal:
 
 > **Goal:** Scrape `[keyword]` in `[location]` using the Leads Sniper local API.
 >
-> 1. **Run `server.py ensure`** first to make sure the server is running
-> 2. **Submit a search job** via `POST /v1/google-maps/search` with keyword="...", location="...", limit=100, extract_emails=true
-> 3. **Poll every 45s** (`GET /v1/jobs/{job_id}`) — log progress to a file, don't print to stdout
-> 4. **Download CSV** from `GET /v1/jobs/{job_id}/export.csv`
-> 5. **Upload to Google Sheets** using the skill's upload script:
+> 1. **Submit a search job** via `POST /v1/google-maps/search` with keyword="...", location="...", limit=100, extract_emails=true
+> 2. **Poll every 45s** (`GET /v1/jobs/{job_id}`) — log progress to a file, don't print to stdout
+> 3. **Download CSV** from `GET /v1/jobs/{job_id}/export.csv`
+> 4. **Upload to Google Sheets** using the skill's upload script:
 >    ```
 >    python "<skill_dir>/scripts/upload_csv_to_sheets.py" "<JOB_ID>" "Title"
 >    ```
-> 6. **Verify** `history.json` was updated with the correct count and sheet URL
-> 7. Return: sheet URL and total count
+> 5. **Verify** `history.json` was updated with the correct count and sheet URL
+> 6. Return: sheet URL and total count
 
-**Context:** Pass the full text above into the delegate_task `context` field. Replace `<skill_dir>` with the actual skill directory path. Add "The sheet must be publicly editable (anyone with link can write)." to context.
+**Context (MUST include pre-checked values):**
+
+Pass the output of the pre-check above. The subagent must use these values directly — **do NOT re-read config, do NOT re-check auth, do NOT re-check server.** Go straight to submitting the job.
+
+```
+token=TOKEN_VALUE
+base_url=BASE_URL_VALUE
+authed=AUTHED_VALUE
+server_running=SERVER_VALUE
+skill_dir=<skill_dir>
+```
+
+Also append: "The sheet must be publicly editable (anyone with link can write)." and "Use ASCII-safe output only in scripts (no emoji in print). Use +/!/x markers."
+
+If pre-check showed server was down, start it from the main agent before delegating (so the context always says server_running=true).
 
 ---
 
@@ -409,7 +464,7 @@ python scripts/setup.py
 ## 🧠 Core Instructions for This Skill
 
 1. **🚫 NEVER use the terminal tool on the chat.** The terminal tool's output always shows on Telegram (`💻 terminal`). Use `execute_code` (Python) for ALL checks — reads, config loading, API pings. `execute_code` runs silently and only shows what you explicitly print.
-2. **Always use `delegate_task`** to submit, poll, and process scraping jobs — the subagent gets its own terminal session and keeps the main chat clean.
+2. **Always use the pre-check then delegate pattern** — first check server/auth/config in `execute_code`, then pass those values as `context` to the subagent. The subagent skips re-checking everything and goes straight to submitting the job (see Scrape Workflow section).
 3. **Progress format** (only this, no raw output):
    ```
    ⏳ 45% — 45 found — still running
