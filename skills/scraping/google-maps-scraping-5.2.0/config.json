@@ -1,0 +1,14 @@
+{
+  "api": {
+    "base_url": "http://127.0.0.1:8787",
+    "token_env_var": "LEADS_SNIPER_TOKEN",
+    "token": "76d80bce3a24d84a52fa77e4045e0034",
+    "server_path": "C:\\Users\\User\\AppData\\Local\\hermes\\skills\\scraping\\google-maps-scraping\\server\\local-api.exe"
+  },
+  "storage": {
+    "dir": "~/Hermes_Scrapes"
+  },
+  "telegram": {
+    "bot_token": ""
+  }
+}

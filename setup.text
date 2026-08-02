@@ -1,0 +1,21 @@
+1. install the hermes desktop application.
+
+2. setup telegrame
+
+3. off backgournd task messages on chats.
+hermes config set display.tool_progress false
+hermes config set display.show_reasoning false
+
+4. setup/move "google-maps-scraping" skill folder to 
+C:\Users\User\AppData\Local\hermes\skills\scraping\google-maps-scraping
+5. opening terminal and run command for config "python scripts/setup.py"
+
+6. /new -- for new session
+7. say prompt "load google maps scraping skill"
+8. say prompt "show menu of google maps scraping skill" -- if there is no menu.
+9. say prompt "scrap for dentist in new york"
+
+
+1. hermes skills
+2. setup requiremnet for every customer.
+3. can't share one vps/pc with multiple persone.
