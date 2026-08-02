@@ -18,19 +18,23 @@ Before installing, make sure your computer has the following requirements ready:
 
 ## 🚀 Quick Install via `skills.sh`
 
-[skills.sh](https://www.skills.sh/) is the package manager and registry for AI Agent skills (used by Claude Code, Cursor, Hermes, Copilot, etc.). You can install this skill automatically in your agent's environment.
+[skills.sh](https://www.skills.sh/) is the package manager and registry for AI Agent skills (used by Claude Code, Cursor, Hermes, Copilot, etc.). You can install this skill automatically in your agent's environment using the CLI.
 
-### Option 1: Using the CLI (Terminal)
-Open your terminal in your agent workspace and run:
+### Option 1: Global Installation (Recommended)
+This installs the skill globally in your home directory (available across all projects on your machine) using the default **symlink** method:
 ```bash
-npx skills add abkorim1998/google-maps-scraper-leads-sniper-agents
+# Non-interactive global install (automatic symlinking)
+npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --global --yes
 ```
 
-### Option 2: Using the VS Code Extension
-1. Open **VS Code** and go to **Extensions** (`Ctrl+Shift+X`).
-2. Search for and install **"Agent Skills - Browse, Install & Manage"**.
-3. Click the **Sparkle Icon** in the Activity Bar to open the Agent Skills panel.
-4. Search for `google-maps-scraper-leads-sniper-agents` and click **Install**.
+### Option 2: Interactive Installation
+To customize the installation scope (Project vs. Global) and method (Symlink vs. Copy), run the command interactively:
+```bash
+npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping
+```
+During the prompt:
+1. Select **Global** as the installation scope.
+2. Choose **Symlink** as the installation method (recommended for easy updates).
 
 ---
 
