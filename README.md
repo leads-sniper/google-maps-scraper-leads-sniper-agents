@@ -49,7 +49,7 @@ If you are not using `skills.sh` or wish to install the skill manually onto your
 ### Step 1: Copy the Skill Folder
 Move or copy the `google-maps-scraping` directory to your local Hermes skills folder:
 ```
-C:\Users\<Your-Username>\AppData\Local\hermes\skills\scraping\google-maps-scraping
+C:\Users\<Your-Username>\AppData\Local\hermes\skills\google-maps-scraping
 ```
 
 ---
@@ -59,11 +59,26 @@ C:\Users\<Your-Username>\AppData\Local\hermes\skills\scraping\google-maps-scrapi
 Once the files are in place, you need to configure the API credentials and storage paths. 
 
 ### Step 1: Run the Interactive Setup Wizard
-Open your terminal, navigate to the skill directory, and run the setup script:
-```bash
-cd C:\Users\<Your-Username>\AppData\Local\hermes\skills\scraping\google-maps-scraping
-python scripts/setup.py
-```
+Open your terminal and run the setup script:
+
+*   **If running directly from the cloned workspace root**:
+    Double-click **`setup.bat`** (on Windows) or run:
+    ```bash
+    python setup.py
+    ```
+    *(The root script automatically detects the skill's location and runs the setup wizard).*
+
+*   **If installed via `skills.sh` globally (Recommended)**:
+    ```bash
+    cd ~\.agents\skills\google-maps-scraping
+    python scripts/setup.py
+    ```
+
+*   **If installed manually in Hermes AppData**:
+    ```bash
+    cd C:\Users\<Your-Username>\AppData\Local\hermes\skills\google-maps-scraping
+    python scripts/setup.py
+    ```
 
 The script will guide you through the following configurations:
 1.  **API Base URL**: The local address where your scraping server runs. (Press **Enter** to keep the default `http://127.0.0.1:8787`).
