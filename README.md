@@ -23,9 +23,9 @@ Before installing, make sure your computer has the following requirements ready:
 ### Option 1: Global Installation (Recommended)
 This installs the skill globally in your home directory (available across all projects on your machine) using the default **symlink** method. 
 
-You can target specific agents (e.g., `hermes-agent`, `claude-code`, `cursor`) to avoid errors from agents that do not support global installs (like PromptScript):
+You can target the Hermes agent specifically to avoid errors from agents that do not support global installs (like PromptScript):
 ```bash
-npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --agent hermes-agent --agent claude-code --agent cursor --global --yes
+npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --agent hermes-agent --global --yes
 ```
 
 > [!NOTE]
