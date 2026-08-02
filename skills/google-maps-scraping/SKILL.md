@@ -363,22 +363,25 @@ Read the last line of `gmaps_progress.log` in the configured storage dir (`get_s
 
 ---
 
-## 🔁 Scrape Workflow
+## 🔁 Scrape Workflow — Instant Execution (No Subagent)
 
 **🚫 ABSOLUTELY NO terminal commands, curl, or raw API calls on the chat. EVER.**
 
-All scraping must happen **inside a `delegate_task` subagent** — the subagent can use terminal/curl internally, but the main chat sees **only** clean progress messages and the final result. No shell commands, no "sleep 45", no "curl -s ...", no background task mentions.
+Use `execute_code` (Python) for everything. The agent **already has the skill loaded** — there is zero need to delegate to a subagent that re-reads everything from scratch.
 
-### ⚡ Speed-Optimized Pattern (Pre-Check Then Delegate)
+**Why no subagent:** delegate_task spawns a fresh LLM with zero context. It re-loads SKILL.md, re-reads lib.py, re-plans the workflow — adding ~50-60s of dead silence before the job even submits. The user sees nothing happen and gets confused. The main agent already has all context loaded, so running directly is instant.
 
-The subagent has **no conversation context** — it re-loads skills, re-reads config, re-checks auth from scratch. That adds ~50s of overhead before the job is even submitted.
+### ⚡ The Pattern: Single execute_code Block
 
-**Permanent fix:** main agent pre-checks everything first, then passes confirmed state to the subagent so it skips setup entirely.
+When user says "scrap for [keyword] in [location]":
 
-**Step 1 — Main agent pre-checks** (in `execute_code`, not terminal):
+1. **Run one `execute_code` block** that does everything: pre-check → submit → return job_id
+2. **Show the user immediate feedback** — print the job_id and status right away
+3. **Then poll asynchronously** using `terminal(background=true)` or periodic checks
 
 ```python
-import sys, json, urllib.request
+# ── Single execute_code block: pre-check + submit in one shot ──
+import sys, json, urllib.request, subprocess
 from pathlib import Path
 
 SKILL = Path.home() / "AppData/Local/hermes/skills/google-maps-scraping"
@@ -390,56 +393,85 @@ token = cfg['api']['token']
 base_url = cfg['api']['base_url']
 authed, _ = check_google_auth()
 
-# Check server
+# Check server — start if needed
 try:
     req = urllib.request.Request(f"{base_url}/v1/status",
         headers={"Authorization": f"Bearer {token}"})
     urllib.request.urlopen(req, timeout=5)
-    server_ok = True
 except Exception:
-    server_ok = False
-    # start server
-    import subprocess
     subprocess.run(["python", str(SKILL/"scripts/server.py"), "ensure"],
         cwd=str(SKILL), capture_output=True, timeout=30)
 
+# ── Submit the job immediately ──
+payload = json.dumps({
+    "keyword": "KEYWORD",       # ← fill from user request
+    "location": "LOCATION",     # ← fill from user request
+    "limit": 100,
+    "extract_emails": True
+}).encode()
+
+req = urllib.request.Request(f"{base_url}/v1/google-maps/search",
+    data=payload,
+    headers={
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    })
+resp = json.loads(urllib.request.urlopen(req, timeout=15).read())
+job_id = resp["job_id"]
+
+# Print just enough for the agent to use
+print(f"JOB_ID={job_id}")
 print(f"TOKEN={token}")
 print(f"BASE_URL={base_url}")
 print(f"AUTHED={authed}")
-print(f"SERVER={server_ok}")
 ```
 
-**Step 2 — Delegate with confirmed state passed as context** (instant, no re-checks):
+**After the execute_code block returns,** the main agent:
+1. Shows the user: `✅ Job submitted! Job ID: job_xxx — scraping dentists in New York...`
+2. Polls `GET /v1/jobs/{job_id}` every 30-45s (in execute_code or terminal background)
+3. When complete → downloads CSV, uploads to Sheets, shows result
 
-Delegate a subagent with this structured goal:
+### ⚠️ When to Use terminal(background) for Polling
 
-> **Goal:** Scrape `[keyword]` in `[location]` using the Leads Sniper local API.
->
-> 1. **Submit a search job** via `POST /v1/google-maps/search` with keyword="...", location="...", limit=100, extract_emails=true
-> 2. **Poll every 45s** (`GET /v1/jobs/{job_id}`) — log progress to a file, don't print to stdout
-> 3. **Download CSV** from `GET /v1/jobs/{job_id}/export.csv`
-> 4. **Upload to Google Sheets** using the skill's upload script:
->    ```
->    python "<skill_dir>/scripts/upload_csv_to_sheets.py" "<JOB_ID>" "Title"
->    ```
-> 5. **Verify** `history.json` was updated with the correct count and sheet URL
-> 6. Return: sheet URL and total count
+If the scrape takes more than ~2 minutes (most do), use a background terminal to poll so the user can keep chatting:
 
-**Context (MUST include pre-checked values):**
+```bash
+# In terminal(background=true), run a polling loop:
+python -c "
+import json, urllib.request, time
+BASE_URL = 'http://127.0.0.1:8787'
+TOKEN = '<token>'
+JOB_ID = '<job_id>'
+while True:
+    req = urllib.request.Request(f'{BASE_URL}/v1/jobs/{JOB_ID}',
+        headers={'Authorization': f'Bearer {TOKEN}'})
+    data = json.loads(urllib.request.urlopen(req, timeout=10).read())
+    status = data['status']
+    progress = data.get('progress', 0)
+    found = data.get('total_found', 0)
+    print(f'JOB|{status}|{progress}|{found}', flush=True)
+    if status in ('completed','stopped','failed'):
+        break
+    time.sleep(45)
+"
+```
 
-Pass the output of the pre-check above. The subagent must use these values directly — **do NOT re-read config, do NOT re-check auth, do NOT re-check server.** Go straight to submitting the job.
+The main agent checks the background terminal's output periodically and shows clean progress to the user (e.g. `⏳ 45% — 45 dentists found — still running`).
+
+### 🏁 Full End-to-End Flow
+
+When user says "scrap for [keyword] in [location]":
 
 ```
-token=TOKEN_VALUE
-base_url=BASE_URL_VALUE
-authed=AUTHED_VALUE
-server_running=SERVER_VALUE
-skill_dir=<skill_dir>
+1. execute_code → pre-check + submit job → returns JOB_ID (takes ~1-2s total)
+2. Agent shows: ✅ Job submitted — scraping dentists in New York...
+3. terminal(background) → polling loop
+4. Agent checks progress, shows: ⏳ 45% — 45 found
+5. When complete → download CSV, upload to Sheets
+6. Agent shows: ✅ Done! 100 dentists found → 📊 [Sheet link]
 ```
 
-Also append: "The sheet must be publicly editable (anyone with link can write)." and "Use ASCII-safe output only in scripts (no emoji in print). Use +/!/x markers."
-
-If pre-check showed server was down, start it from the main agent before delegating (so the context always says server_running=true).
+No delegation. No 57s of dead silence. Job submits in <2 seconds.
 
 ---
 
@@ -464,7 +496,7 @@ python scripts/setup.py
 ## 🧠 Core Instructions for This Skill
 
 1. **🚫 NEVER use the terminal tool on the chat.** The terminal tool's output always shows on Telegram (`💻 terminal`). Use `execute_code` (Python) for ALL checks — reads, config loading, API pings. `execute_code` runs silently and only shows what you explicitly print.
-2. **Always use the pre-check then delegate pattern** — first check server/auth/config in `execute_code`, then pass those values as `context` to the subagent. The subagent skips re-checking everything and goes straight to submitting the job (see Scrape Workflow section).
+2. **Never use delegate_task for scraping.** The main agent already has the skill loaded. Run the pre-check + submit in one `execute_code` block. Job submits in <2 seconds. See Scrape Workflow section above.
 3. **Progress format** (only this, no raw output):
    ```
    ⏳ 45% — 45 found — still running
