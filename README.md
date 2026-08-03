@@ -13,6 +13,7 @@ Before installing, make sure your computer has the following requirements ready:
 3. **Leads Sniper API Key**: Active and copied from the extension side panel.
 4. **Hermes Desktop Application**: Installed on your system.
 5. **Python 3.8 or newer**: Installed and added to your system's `PATH`.
+6. **Node.js (v22.22.0 or newer)**: Required to run `npx skills` installation commands (Note: Hermes Agent requires Node >= 22.22.0).
 
 ---
 
