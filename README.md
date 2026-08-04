@@ -26,13 +26,13 @@ This installs the skill globally in your home directory using the **symlink** me
 
 To force the `skills` CLI to create a symbolic link (symlink) on Windows, target both `hermes-agent` and `claude-code` (targeting a single agent defaults to copying the files instead of symlinking):
 ```bash
-npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --agent hermes-agent --agent claude-code --global --yes
+npx skills add https://github.com/leads-sniper/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping --agent hermes-agent --agent claude-code --global --yes
 ```
 
 ### Option 2: Interactive Installation
 To customize the installation scope and method step-by-step:
 ```bash
-npx skills add https://github.com/abkorim1998/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping
+npx skills add https://github.com/leads-sniper/google-maps-scraper-leads-sniper-agents --skill google-maps-scraping
 ```
 During the prompt:
 1. Select **Global** as the installation scope.
