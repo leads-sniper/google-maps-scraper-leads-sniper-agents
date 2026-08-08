@@ -69,22 +69,28 @@ Run the setup wizard directly from your terminal using the copy-pasteable comman
 
 *   **If installed via `skills.sh` globally (Recommended)**:
     Run the script using the system home path:
-    ```cmd
-    # Command Prompt (CMD):
+    ```bash
+    # Windows (CMD):
     python %USERPROFILE%\.agents\skills\google-maps-scraping\scripts\setup.py
 
-    # PowerShell:
+    # Windows (PowerShell):
     python $HOME\.agents\skills\google-maps-scraping\scripts\setup.py
+
+    # macOS & Linux (Terminal):
+    python3 ~/.agents/skills/google-maps-scraping/scripts/setup.py
     ```
 
 *   **If installed manually in Hermes AppData**:
     Run the script using the local AppData path:
-    ```cmd
-    # Command Prompt (CMD):
+    ```bash
+    # Windows (CMD):
     python %LOCALAPPDATA%\hermes\skills\google-maps-scraping\scripts\setup.py
 
-    # PowerShell:
+    # Windows (PowerShell):
     python $env:LOCALAPPDATA\hermes\skills\google-maps-scraping\scripts\setup.py
+
+    # macOS & Linux (Terminal):
+    python3 ~/.hermes/skills/google-maps-scraping/scripts/setup.py
     ```
 
 The script will guide you through the following configurations:

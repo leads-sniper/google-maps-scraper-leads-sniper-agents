@@ -149,8 +149,7 @@ def _run_gws(args, gws_setup, capture=False):
 
 def google_workspace_section(existing, has_existing):
     """Check Google Workspace auth and guide the user through setup interactively."""
-    print("┌─ Google Workspace (required for Sheets uploads) ─┐")
-    print()
+    print(f"\n{BOLD}{CYAN}── Google Workspace Integration (Optional) ──{RESET}")
 
     authed, token_path = check_google_auth()
     redoing = False
@@ -284,8 +283,7 @@ def main():
         warn(f"Existing config found at: {CONFIG_PATH}")
         print("  Press Enter to keep current values, or type new ones.\n")
 
-    print("┌─ API Configuration ─────────────────────────────┐")
-    print()
+    print(f"\n{BOLD}{CYAN}── API Configuration ──{RESET}")
 
     # API Base URL
     default_url = existing.get("api", {}).get("base_url") or DEFAULTS["api"]["base_url"]
@@ -311,8 +309,7 @@ def main():
         resolved_token = token_source
     print()
 
-    print("┌─ Leads Sniper Server ───────────────────────────┐")
-    print()
+    print(f"\n{BOLD}{CYAN}── Leads Sniper Server ──{RESET}")
 
     # Auto-detect bundled exe
     exe_name = _get_default_exe_name()
@@ -406,8 +403,7 @@ def main():
             warn("Check that the server is running and the token is correct.")
         print()
 
-    print("┌─ Storage ────────────────────────────────────────┐")
-    print()
+    print(f"\n{BOLD}{CYAN}── Storage Settings ──{RESET}")
 
     default_storage = existing.get("storage", {}).get("dir") or DEFAULTS["storage"]["dir"]
     storage_dir = prompt("  Storage directory", default=default_storage)
@@ -423,8 +419,7 @@ def main():
         ok(f"Directory exists: {expanded}")
     print()
 
-    print("┌─ Telegram (optional) ────────────────────────────┐")
-    print()
+    print(f"\n{BOLD}{CYAN}── Telegram Notifications (Optional) ──{RESET}")
 
     default_tg = existing.get("telegram", {}).get("bot_token", "")
     if default_tg:
