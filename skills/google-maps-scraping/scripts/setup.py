@@ -28,6 +28,7 @@ from pathlib import Path
 SKILL_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SKILL_DIR / "scripts"))
 from lib import CONFIG_PATH, DEFAULTS, load_config, save_config, get_hermes_home, check_google_auth
+from server import _get_default_exe_name
 
 # ---- Helpers ----
 
@@ -91,6 +92,52 @@ def test_api(base_url, token):
         return False, f"HTTP {e.code}: {e.reason}"
     except Exception as e:
         return False, str(e)
+
+
+def download_server_binary(dest_path, binary_name):
+    """Download the correct native Leads Sniper API server binary from GitHub Releases."""
+    BASE_URL = "https://github.com/leads-sniper/google-maps-scraper-leads-sniper-agents/releases/latest/download/"
+    url = f"{BASE_URL}{binary_name}"
+    
+    print(f"  Downloading native Leads Sniper API server for your platform...")
+    print(f"  Source: {url}")
+    try:
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        # Download block-by-block to show progress
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+        )
+        with urllib.request.urlopen(req) as response, open(dest_path, 'wb') as out_file:
+            meta = response.info()
+            file_size = int(meta.get("Content-Length", 0))
+            downloaded = 0
+            block_size = 16384
+            
+            while True:
+                buffer = response.read(block_size)
+                if not buffer:
+                    break
+                downloaded += len(buffer)
+                out_file.write(buffer)
+                if file_size > 0:
+                    percent = downloaded * 100 / file_size
+                    sys.stdout.write(f"\r  Progress: {percent:.1f}% ({downloaded / (1024*1024):.1f}MB / {file_size / (1024*1024):.1f}MB)")
+                    sys.stdout.flush()
+            print()
+        
+        # Set executable permissions on Unix systems
+        if sys.platform != "win32":
+            try:
+                os.chmod(str(dest_path), 0o755)
+            except Exception:
+                pass
+            
+        ok(f"Successfully downloaded and configured native server: {dest_path.name}")
+        return True
+    except Exception as e:
+        fail(f"Failed to download server binary: {e}")
+        return False
 
 
 def _run_gws(args, gws_setup, capture=False):
@@ -268,19 +315,35 @@ def main():
     print()
 
     # Auto-detect bundled exe
-    bundled_exe = SKILL_DIR / "server" / "local-api.exe"
+    exe_name = _get_default_exe_name()
+    bundled_exe = SKILL_DIR / "server" / exe_name
     default_server = existing.get("api", {}).get("server_path") or str(bundled_exe)
 
     if bundled_exe.exists():
         ok(f"Bundled server found: {bundled_exe}")
         server_path = str(bundled_exe)
     else:
-        warn("No server binary found in skill folder.")
-        server_path = prompt("  Path to local-api.exe", default=default_server)
-        if server_path and not Path(server_path).exists():
-            warn(f"File not found: {server_path}")
-            warn("You can set it later in config.json")
-        print()
+        platform_fallback = "local-api.exe" if sys.platform == "win32" else "local-api"
+        generic_exe = SKILL_DIR / "server" / platform_fallback
+        if generic_exe.exists():
+            ok(f"Bundled server found: {generic_exe}")
+            server_path = str(generic_exe)
+        else:
+            warn("No server binary found in skill folder.")
+            download_now = prompt("  Would you like to download the native server binary now?", default="y").lower()
+            if download_now in ("y", "yes"):
+                success = download_server_binary(bundled_exe, exe_name)
+                if success:
+                    server_path = str(bundled_exe)
+                else:
+                    server_path = prompt(f"  Path to server binary ({platform_fallback})", default=default_server)
+            else:
+                server_path = prompt(f"  Path to server binary ({platform_fallback})", default=default_server)
+                
+            if server_path and not Path(server_path).exists():
+                warn(f"File not found: {server_path}")
+                warn("You can set it later in config.json")
+            print()
 
     # Option to start the server now
     if server_path and Path(server_path).exists():
@@ -454,8 +517,19 @@ if __name__ == "__main__":
         if env_storage:
             config["storage"]["dir"] = env_storage
         # Auto-detect bundled server
-        bundled = SKILL_DIR / "server" / "local-api.exe"
-        if bundled.exists():
+        exe_name = _get_default_exe_name()
+        bundled = SKILL_DIR / "server" / exe_name
+        if not bundled.exists():
+            platform_fallback = "local-api.exe" if sys.platform == "win32" else "local-api"
+            generic_exe = SKILL_DIR / "server" / platform_fallback
+            if generic_exe.exists():
+                bundled = generic_exe
+            else:
+                download_success = download_server_binary(bundled, exe_name)
+                if not download_success:
+                    bundled = None
+                    
+        if bundled and bundled.exists():
             config["api"]["server_path"] = str(bundled)
         save_config(config)
         ok(f"Config written to {CONFIG_PATH}")

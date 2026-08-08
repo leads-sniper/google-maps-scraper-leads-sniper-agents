@@ -31,7 +31,25 @@ SERVER_DIR = SKILL_DIR / "server"
 PID_FILE = SERVER_DIR / "server.pid"
 LOG_FILE = SERVER_DIR / "server.log"
 
-DEFAULT_EXE = SERVER_DIR / "local-api.exe"
+def _get_default_exe_name():
+    import sys
+    import platform
+    system = sys.platform
+    arch = platform.machine().lower()
+    if system == "win32":
+        return "local-api-windows-amd64.exe"
+    elif system == "darwin":
+        if "arm" in arch or "m1" in arch or "m2" in arch or "m3" in arch:
+            return "local-api-darwin-arm64"
+        return "local-api-darwin-amd64"
+    elif system == "linux":
+        if "arm" in arch or "aarch64" in arch:
+            return "local-api-linux-arm64"
+        return "local-api-linux-amd64"
+    return "local-api.exe"
+
+DEFAULT_EXE_NAME = _get_default_exe_name()
+DEFAULT_EXE = SERVER_DIR / DEFAULT_EXE_NAME
 POLL_INTERVAL = 2
 START_TIMEOUT = 30
 
@@ -79,9 +97,32 @@ def _get_server_path():
     if path_str:
         p = Path(path_str)
         if p.exists():
+            if sys.platform != "win32":
+                try:
+                    os.chmod(str(p), 0o755)
+                except Exception:
+                    pass
             return p
-    if DEFAULT_EXE.exists():
-        return DEFAULT_EXE
+
+    platform_exe = SERVER_DIR / _get_default_exe_name()
+    if platform_exe.exists():
+        if sys.platform != "win32":
+            try:
+                os.chmod(str(platform_exe), 0o755)
+            except Exception:
+                pass
+        return platform_exe
+
+    fallback_name = "local-api.exe" if sys.platform == "win32" else "local-api"
+    fallback_exe = SERVER_DIR / fallback_name
+    if fallback_exe.exists():
+        if sys.platform != "win32":
+            try:
+                os.chmod(str(fallback_exe), 0o755)
+            except Exception:
+                pass
+        return fallback_exe
+
     return None
 
 

@@ -1,0 +1,11 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local API Server binaries and runtime data
+skills/google-maps-scraping/server/local-api*
+skills/google-maps-scraping/server/server.pid
+skills/google-maps-scraping/server/server.log
+skills/google-maps-scraping/server/data/
+config.json
